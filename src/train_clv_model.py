@@ -1,4 +1,5 @@
 import pandas as pd
+import joblib
 from sqlalchemy import create_engine
 
 engine = create_engine('postgresql://postgres:Karthi_001@localhost:5432/online_retail')
@@ -7,7 +8,7 @@ df = pd.read_sql('SELECT * FROM customer_features', engine)
 
 print(df.shape)
 
-x = df[['recency', 'frequency', 'avg_order_value', 'lifetime_days']]
+x = df[['recency', 'frequency', 'avg_order_value', 'lifetime_days', 't']]
 y = df['monetary']
 
 from sklearn.model_selection import train_test_split
@@ -39,3 +40,7 @@ plot_importance(model)
 plt.show()
 
 print(df.describe())
+
+import joblib
+
+joblib.dump(model, "models/clv_xgboost_model.pkl")
