@@ -1,4 +1,9 @@
-WITH revenue AS (
+WITH snapshots AS (
+    SELECT MAX(invoicedate) + INTERVAL '1 day' AS snapshot_date
+    FROM transactions
+),
+
+revenue AS (
     SELECT 
         customer_id,
         SUM(quantity * price) AS total_revenue
@@ -32,7 +37,12 @@ JOIN frequency f ON r.customer_id = f.customer_id
 JOIN recency rec ON r.customer_id = rec.customer_id;
 
 CREATE TABLE customer_features AS
-WITH revenue AS (
+WITH snapshot AS (
+    SELECT MAX(invoicedate) + INTERVAL '1 day' AS snapshot_date
+    FROM transactions
+),
+
+revenue AS (
     SELECT 
         customer_id,
         SUM(quantity * price) AS monetary
@@ -64,6 +74,18 @@ lifetime_days AS(
 		date_part('day',max(invoicedate)-min(invoicedate)) AS lifetime_days
 		FROM transactions
 		GROUP BY customer_id
+),
+
+T_feature AS (
+    SELECT
+        t.customer_id,
+        DATE_PART(
+            'day',
+            s.snapshot_date - MIN(t.invoicedate)
+        ) AS T
+    FROM transactions t
+    CROSS JOIN snapshot s
+    GROUP BY t.customer_id, s.snapshot_date
 )
 
 SELECT 
@@ -72,10 +94,13 @@ SELECT
     f.frequency,
     r.monetary,
 	(r.monetary/f.frequency) AS avg_order_value,
-	l.lifetime_days
+	l.lifetime_days,
+    t.T
 FROM revenue r
 JOIN frequency f ON r.customer_id = f.customer_id
 JOIN recency rec ON r.customer_id = rec.customer_id
-JOIN lifetime_days l ON r.customer_id = l.customer_id;
+JOIN lifetime_days l ON r.customer_id = l.customer_id
+JOIN T_feature t ON r.customer_id = t.customer_id;
+select * from customer_features;
 
 SELECT count(*) from customer_features;

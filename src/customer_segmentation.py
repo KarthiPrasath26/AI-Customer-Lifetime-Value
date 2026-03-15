@@ -58,6 +58,8 @@ cluster_names = {
 
 df["segment"] = df["cluster"].map(cluster_names)
 
+df = df[df["monetary"] > 0]
+
 
 # Save results
 df.to_csv(r"D:/CLV suite/data/processed/customer_segments.csv", index=False)
