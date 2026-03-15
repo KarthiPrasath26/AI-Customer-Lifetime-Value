@@ -44,3 +44,15 @@ print(df.describe())
 import joblib
 
 joblib.dump(model, "models/clv_xgboost_model.pkl")
+
+importance = model.feature_importances_
+
+importance_df =pd.DataFrame({"feature": x.columns, "importance": importance})
+
+importance_df = importance_df[importance_df["feature"] != "t"]
+
+importance_df = importance_df.sort_values(by="importance", ascending=False)
+
+print(importance_df)
+
+importance_df.to_csv("D:/CLV suite/data/processed/feature_importance.csv", index=False)
